@@ -5,7 +5,7 @@ import (
 	"io"
 	"sort"
 
-	"github.com/yukithm/json2csv/jsonpointer"
+	"github.com/Evanfeenstra/json2csv/jsonpointer"
 )
 
 // KeyStyle represents the specific style of the key.
@@ -43,7 +43,7 @@ func NewCSVWriter(w io.Writer) *CSVWriter {
 }
 
 // WriteCSV writes CSV data.
-func (w *CSVWriter) WriteCSV(results []KeyValue, customizations map[string]interface{}) error {
+func (w *CSVWriter) WriteCSV(results []KeyValue, customizations map[string]func(interface{}) string) error {
 	if w.Transpose {
 		return w.writeTransposedCSV(results)
 	}
@@ -51,7 +51,7 @@ func (w *CSVWriter) WriteCSV(results []KeyValue, customizations map[string]inter
 }
 
 // WriteCSV writes CSV data.
-func (w *CSVWriter) writeCSV(results []KeyValue, customizations map[string]interface{}) error {
+func (w *CSVWriter) writeCSV(results []KeyValue, customizations map[string]func(interface{}) string) error {
 	pts, err := allPointers(results)
 	if err != nil {
 		return err
@@ -136,12 +136,12 @@ func (w *CSVWriter) getHeader(pointers pointers) []string {
 	}
 }
 
-func toRecord(kv KeyValue, keys []string, customizations map[string]interface{}) []string {
+func toRecord(kv KeyValue, keys []string, customizations map[string]func(interface{}) string) []string {
 	record := make([]string, 0, len(keys))
 	for _, key := range keys {
 		if value, ok := kv[key]; ok {
 			if customizations[key[1:]] != nil {
-				v := customizations[key[1:]].(func(interface{}) string)(value)
+				v := customizations[key[1:]](value)
 				record = append(record, v)
 			} else {
 				record = append(record, toString(value))
