@@ -43,15 +43,15 @@ func NewCSVWriter(w io.Writer) *CSVWriter {
 }
 
 // WriteCSV writes CSV data.
-func (w *CSVWriter) WriteCSV(results []KeyValue) error {
+func (w *CSVWriter) WriteCSV(results []KeyValue, customizations map[string]interface{}) error {
 	if w.Transpose {
 		return w.writeTransposedCSV(results)
 	}
-	return w.writeCSV(results)
+	return w.writeCSV(results, customizations)
 }
 
 // WriteCSV writes CSV data.
-func (w *CSVWriter) writeCSV(results []KeyValue) error {
+func (w *CSVWriter) writeCSV(results []KeyValue, customizations map[string]interface{}) error {
 	pts, err := allPointers(results)
 	if err != nil {
 		return err
@@ -65,7 +65,7 @@ func (w *CSVWriter) writeCSV(results []KeyValue) error {
 	}
 
 	for _, result := range results {
-		record := toRecord(result, keys)
+		record := toRecord(result, keys, customizations)
 		if err := w.Write(record); err != nil {
 			return err
 		}
@@ -136,11 +136,16 @@ func (w *CSVWriter) getHeader(pointers pointers) []string {
 	}
 }
 
-func toRecord(kv KeyValue, keys []string) []string {
+func toRecord(kv KeyValue, keys []string, customizations map[string]interface{}) []string {
 	record := make([]string, 0, len(keys))
 	for _, key := range keys {
 		if value, ok := kv[key]; ok {
-			record = append(record, toString(value))
+			if customizations[key[1:]] != nil {
+				v := customizations[key[1:]].(func(interface{}) string)(value)
+				record = append(record, v)
+			} else {
+				record = append(record, toString(value))
+			}
 		} else {
 			record = append(record, "")
 		}
