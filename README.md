@@ -1,3 +1,5 @@
+forked from [https://github.com/yukithm/json2csv](https://github.com/yukithm/json2csv)
+
 [![Build Status](https://travis-ci.org/yukithm/json2csv.svg?branch=master)](https://travis-ci.org/yukithm/json2csv)
 
 json2csv
